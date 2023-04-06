@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="post" action="/feedbacks/new" enctype="multipart/form-data" id="service-form">
+  {% csrf_token %}
+  <label for="text">Название*:</label>
+  <input type="text" name="text" id="text"><br>
+  <label for="score">Оценка от 1 до 5*:</label>
+  <input type="number" name="score" id="score"><br>
+  <label for="image">Поле для картинки:</label>
+  <input type="file" name="image" id="image"><br>
+  <input type="submit" value="Submit">
+</form>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#service-form').on('submit', function(e) {
+      e.preventDefault();
+      var text = $('#text').val(),
+          photo = $('#photo').val(),
+          score = $('#score').val();
+      if (!text || !score) {
+        alert('Заполните все обязательные поля.');
+        return false;
+      if (score < 1 || score > 5 || !Number.isInteger(score)) {
+        alert('Оценка должна быть от 1 до 5  не должно сдержать дробной части!')
+        return false;
+      }
+      }
+      $.ajax({
+        url: $(this).attr('action'),
+        type: 'POST',
+        data: new FormData(this),
+        processData: false,
+        contentType: false,
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus, errorThrown);
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

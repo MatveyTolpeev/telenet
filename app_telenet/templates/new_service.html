@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<form method="post" action="/services/new" enctype="multipart/form-data" id="service-form">
+  {% csrf_token %}
+  <label for="name">Название*:</label>
+  <input type="text" name="name" id="name"><br>
+  <label for="description">Описание:</label>
+  <textarea name="description" id="description"></textarea><br>
+      <label for="price">Цена*:</label>
+  <input type="number" name="price" id="price"><br>
+  <label for="image">Поле для картинки:</label>
+  <input type="file" name="image" id="image"><br>
+  <input type="submit" value="Submit">
+</form>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#service-form').on('submit', function(e) {
+      e.preventDefault();
+      var name = $('#name').val(),
+          description = $('#description').val(),
+          price = $('#price').val();
+      if (!name || !price) {
+        alert('Заполните все обязательные поля.');
+        return false;
+      }
+      $.ajax({
+        url: $(this).attr('action'),
+        type: 'POST',
+        data: new FormData(this),
+        processData: false,
+        contentType: false,
+        success: function(response) {
+          console.log(response);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log(textStatus, errorThrown);
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

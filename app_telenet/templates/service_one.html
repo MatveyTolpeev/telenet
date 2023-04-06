@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="col-md-5 col-lg-8">
+        <h2 class="mb-4">Услуга: {{service.name}}</h2>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <p class="form-control">Описание: {{ service.description }}</p>
+            </div>
+
+            <div class="col-sm-6">
+              <p class="form-control">Цена: {{ service.price }}</p>
+            </div>
+
+            <a href="/service/feedbacks/{{service.id}}"><button class="w-50 btn btn-primary btn-lg" type="submit">Отзывы о услуге...</button></a>
+</div>
+{% endblock %}

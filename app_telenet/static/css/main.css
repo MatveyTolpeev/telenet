@@ -1,0 +1,38 @@
+/*body {*/
+/*  margin: 0;*/
+
+/*  font-family: Tahoma, sans-serif;*/
+/*  font-size: 16px;*/
+/*  color: #111;*/
+/*}*/
+
+/*.page {*/
+/*  overflow: hidden;*/
+/*}*/
+
+/**,*/
+/**:before,*/
+/**:after {*/
+/*  box-sizing: border-box;*/
+/*}*/
+
+/*.header,*/
+/*.footer {*/
+/*  padding: 20px;*/
+/*  background-color: #2725b5;*/
+/*  text-align: center;*/
+/*}*/
+
+/*.content {*/
+/*  height: 2000px;*/
+/*  margin: 0 auto;*/
+/*  padding: 40px 20px;*/
+/*}*/
+
+.footer {
+  margin-top: auto;
+}
+
+/*.service_block {*/
+
+/*}*/
