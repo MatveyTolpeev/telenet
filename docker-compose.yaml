@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis
+    restart: always
+
+  celery_redis_django_test:
+    build:
+      context: ./
+    ports:
+      - "8000:8000"
+    restart: always
+    command: [ "python3", "./src/manage.py", "runserver", "0.0.0.0:8000" ]
+
+  worker:
+    restart: always
+    build:
+      context: ./
+    volumes:
+      - ./photos:/app/src/photos
+    command: ['celery', '--workdir=./src', '-A', 'app', 'worker']

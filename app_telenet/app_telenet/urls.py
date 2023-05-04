@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from telenet_site.views import main_page, about, contacts, services, services_new, \
     service_feedbacks_new, service_photo_add, \
-    service_read, service_feedbacks, service_edit, delete_service, delete_feedback
+    service_read, service_feedbacks, service_edit, delete_service, delete_feedback, UploadExcelView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,4 +33,5 @@ urlpatterns = [
     path('service/photo/add/<int:id>', service_photo_add, name='service_photo_add'),
     path('service/feedbacks/delete/<int:id>', delete_feedback, name='service_feedbacks_delete'),
     path('service/delete/<int:id>', delete_service, name='delete_service'),
+    path('services/upload_from_file', UploadExcelView.as_view(), name='fill_service_from_excel')
 ]

@@ -3,10 +3,12 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.db import connection
 from django.db.models import Avg
+from django.views import View
 
 from .forms import ServiceImageSetForm
 from .models import Service, Feedback
 from .other_functions import out_green, out_blue, out_yellow
+from .tasks import fill_service_from_excel
 import requests
 # Create your views here.
 
@@ -185,3 +187,18 @@ def service_photo_add(request, id):
         form = ServiceImageSetForm()
     out_green('[++] end service_photo_add')
     return render(request, 'service_upload_image.html', {'form': form})
+
+
+class UploadExcelView(View):
+    def get(self, request):
+        return render(request, 'upload_excel.html')
+
+    def post(self, request):
+        file = request.FILES.get('file')
+        print(file)
+        if file:
+            fill_service_from_excel.delay(file.temporary_file_path())
+            return HttpResponse('File uploaded and processing started. '
+                                '<a href="/services"><button>Вернуться на главную страницу</button></a>')
+        else:
+            return HttpResponse('No file uploaded. <a href="/services"><button>Вернуться на главную страницу</button></a>')
