@@ -1,16 +1,20 @@
+from django.forms import model_to_dict
+from rest_framework import generics
 from PIL import Image
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.db import connection
 from django.db.models import Avg
 from django.views import View
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .forms import ServiceImageSetForm
 from .models import Service, Feedback
 from .other_functions import out_green, out_blue, out_yellow
+from .serializers import ServiceSerializer
 from .tasks import fill_service_from_excel
 import requests
-# Create your views here.
 
 
 def main_page(request):
@@ -46,8 +50,13 @@ def services(request, added_new=False):
     out_yellow('[+] services')
     # services = Service.objects.all()
     services = Service.objects.annotate(avg_score=Avg('feedback__score'))
-    services_refactor = [{'id': el.id, 'name': el.name, 'description': el.description, 'price': el.price,
-                          'avg_score': round(el.avg_score, 2)} for el in services]
+    service_refactor = []
+    try:
+        services_refactor = [{'id': el.id, 'name': el.name, 'description': el.description, 'price': el.price,
+                              'avg_score': round(el.avg_score, 2)} for el in services]
+    except Exception as e:
+        services_refactor = [{'id': el.id, 'name': el.name, 'description': el.description, 'price': el.price}
+                            for el in services]
     data = {'services': services_refactor, 'added_new': added_new}
     out_green('[++] end services')
     return render(request, 'services.html', data)
@@ -70,7 +79,7 @@ def service_feedbacks(request, id):
         feedbacks_rendered = [el for el in feedbacks]
         services_names = [el.name for el in service]
         service_name = services_names[0]
-        data = {'feedbacks': feedbacks_rendered, 'service_name': service_name,}
+        data = {'feedbacks': feedbacks_rendered, 'service_name': service_name, }
         out_green('[++] end service_feedbacks')
         return render(request, 'service_feedbacks.html', data)
     if request.method == 'POST':
@@ -109,7 +118,6 @@ def services_new(request):
         return HttpResponse(request, '<h1>Метод не поддерживается<h1>')
 
 
-
 def service_edit(request, id):
     out_yellow('[+] service_edit')
     if request.method == 'GET':
@@ -119,7 +127,8 @@ def service_edit(request, id):
         return render(request, 'service_edit.html', data)
     if request.method == 'POST':
         service = Service.objects.get(id=id)
-        print('{}, {}, {}'.format(str(request.POST.get('price')), str(request.POST.get('description')), str(request.POST.get('name'))))
+        print('{}, {}, {}'.format(str(request.POST.get('price')), str(request.POST.get('description')),
+                                  str(request.POST.get('name'))))
         service.name = request.POST.get('name')
         service.description = request.POST.get('description')
         service.price = request.POST.get('price')
@@ -129,7 +138,7 @@ def service_edit(request, id):
 
 def service_feedbacks_new(request, id):
     out_yellow('[+] service_feedbacks_new')
-    if request.method =='GET':
+    if request.method == 'GET':
         out_green('[++] end service_feedbacks_new')
         return render(request, 'new_feedback.html', {'id': id})
     if request.method == 'POST':
@@ -143,6 +152,7 @@ def service_feedbacks_new(request, id):
         out_green('[++] end service_feedbacks_new')
         return redirect('/service/feedbacks/' + str(id))
 
+
 def delete_feedback(request, id):
     out_yellow('[+] delete_feedback')
     feed = Feedback.objects.get(id=id)
@@ -150,7 +160,7 @@ def delete_feedback(request, id):
     feed.delete()
     data = {'message': 'Вы удалили отзыв: ' + str(temp_feed.text) + ' с оценкой: ' + str(temp_feed.score)}
     out_green('[++] end delete_feedback')
-    return redirect('/service/feedbacks/'+str(temp_feed.service_id), deleted=data)
+    return redirect('/service/feedbacks/' + str(temp_feed.service_id), deleted=data)
     # return redirect('service_feedbacks', id=temp_feed.service_id, deleted=data)
 
 
@@ -201,4 +211,39 @@ class UploadExcelView(View):
             return HttpResponse('File uploaded and processing started. '
                                 '<a href="/services"><button>Вернуться на главную страницу</button></a>')
         else:
-            return HttpResponse('No file uploaded. <a href="/services"><button>Вернуться на главную страницу</button></a>')
+            return HttpResponse(
+                'No file uploaded. <a href="/services"><button>Вернуться на главную страницу</button></a>')
+
+
+# Далее идёт API на DRF
+
+
+class ServiceApiView(APIView):
+    def get(self, request):
+        lst = Service.objects.all().values()
+        return Response({'posts': list(lst)})
+
+    def post(self, request):
+        service_new = Service.objects.create(
+            name=request.data['name'],
+            description=request.data['description'],
+            price=request.data['price'],
+            image=None
+        )
+
+        return Response({'post': model_to_dict(service_new)})
+
+    def put(self, request, *args, **kwargs):
+        pk = kwargs.get("pk", None)
+        if not pk:
+            return Response({"error": "Method PUT not allowed without id"})
+
+        try:
+            instance = Service.objects.get(pk=pk)
+        except:
+            return Response({"error": "Object does not exists"})
+
+        serializer = ServiceSerializer(data=request.data, instance=instance)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"status": "Success"})

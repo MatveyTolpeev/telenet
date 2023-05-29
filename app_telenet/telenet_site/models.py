@@ -6,11 +6,15 @@ from django.db import models
 
 # Create your models here.
 
+
 class Service(models.Model):
     name = models.CharField(max_length=255, null=False, default="")
     description = models.TextField(null=True)
     price = models.FloatField(null=False, default=0)
-    image = models.ImageField(upload_to='service_images/' + str(datetime.datetime.now()))
+    image = models.ImageField(upload_to='service_images/' + str(datetime.datetime.now()), null=True, blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Feedback(models.Model):
@@ -20,6 +24,11 @@ class Feedback(models.Model):
     create_datetime = models.DateTimeField(auto_now_add=True)
     edit_datetime = models.DateTimeField(auto_now=True)
     image = models.ImageField(upload_to='feedback_images/' + str(datetime.datetime.now()))
+
+    def __str__(self):
+        return f'{self.service.name}: {str(self.text)[:10]}'
+
+
 class Order(models.Model):
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, null=False, blank=True, default="")
     register_date = models.DateTimeField(auto_now_add=True)
